@@ -1074,7 +1074,7 @@ for x in {x.get_name()}._buttons_dict.values():
         try:
             widget.update_idletasks()
             if mode == "place":
-                widget.pack_options = dict(widget.pack_info())
+                widget.pack_options = {k: v for k, v in widget.pack_info().items() if k != "in"}
                 po = {"x": int(widget.winfo_x()), "y": int(widget.winfo_y()), "width": max(1,int(widget.winfo_width())), "height": max(1,int(widget.winfo_height()))}
                 widget.pack_forget(); widget.place(**po); widget.place_options = po; self.bind_free_drag(widget)
             else:
