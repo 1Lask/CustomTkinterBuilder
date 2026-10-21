@@ -348,7 +348,8 @@ root.mainloop()
                 code.add_line(f"{x.get_name()} = {x.get_class()}(master={parent})")
                 if self.layout_mode == "place":
                     po = getattr(x, "place_options", {}) or {"x": int(x.winfo_x()), "y": int(x.winfo_y()), "width": max(1, int(x.winfo_width())), "height": max(1, int(x.winfo_height()))}
-                    code.add_line(f"{x.get_name()}.place(x={int(po.get('x', 0))}, y={int(po.get('y', 0))}, width={int(po.get('width', 100))}, height={int(po.get('height', 30))})")
+                    code.add_line(f"{x.get_name()}.configure(width={int(po.get('width', 100))}, height={int(po.get('height', 30))})")
+                    code.add_line(f"{x.get_name()}.place(x={int(po.get('x', 0))}, y={int(po.get('y', 0))})")
                 if x.type == "FRAME" and not x._bool_change(x.propagate_on_pack):
                     code.add_line(f"{x.get_name()}.pack_propagate({x._bool_change(x.propagate_on_pack)})")
             else:
@@ -495,7 +496,8 @@ for x in {x.get_name()}._buttons_dict.values():
                 p = p[0:-2]
                 if self.layout_mode == "place":
                     po = getattr(x, "place_options", {}) or {"x": int(x.winfo_x()), "y": int(x.winfo_y()), "width": max(1, int(x.winfo_width())), "height": max(1, int(x.winfo_height()))}
-                    code.add_line(f"{x.get_name()}.place(x={int(po.get('x', 0))}, y={int(po.get('y', 0))}, width={int(po.get('width', 100))}, height={int(po.get('height', 30))})")
+                    code.add_line(f"{x.get_name()}.configure(width={int(po.get('width', 100))}, height={int(po.get('height', 30))})")
+                    code.add_line(f"{x.get_name()}.place(x={int(po.get('x', 0))}, y={int(po.get('y', 0))})")
                 else:
                     code.add_line(f"{x.get_name()}.pack({p})")
                 if run:
@@ -756,7 +758,7 @@ for x in {x.get_name()}._buttons_dict.values():
             new_widget.place_options = d[x].get("place_options", {}) or {}
             if self.layout_mode == "place":
                 po = new_widget.place_options or {"x":10,"y":10,"width":max(80,new_widget.winfo_reqwidth()),"height":max(28,new_widget.winfo_reqheight())}
-                new_widget.place(**po); new_widget.place_options = po; self.bind_free_drag(new_widget)
+                new_widget.configure(width=po["width"], height=po["height"]); new_widget.place(x=po["x"], y=po["y"]); new_widget.place_options = po; self.bind_free_drag(new_widget)
             else: new_widget.pack(**new_widget.pack_options)
 
             if new_widget.__class__ == SegmentedButton:
@@ -1003,7 +1005,8 @@ for x in {x.get_name()}._buttons_dict.values():
 
             if self.layout_mode == "place":
                 po = getattr(x, "place_options", {}) or {"x": int(x.winfo_x()), "y": int(x.winfo_y()), "width": max(1, int(x.winfo_width())), "height": max(1, int(x.winfo_height()))}
-                code.add_line(f"self.{x.get_name()}.place(x={int(po.get('x', 0))}, y={int(po.get('y', 0))}, width={int(po.get('width', 100))}, height={int(po.get('height', 30))})")
+                code.add_line(f"self.{x.get_name()}.configure(width={int(po.get('width', 100))}, height={int(po.get('height', 30))})")
+                code.add_line(f"self.{x.get_name()}.place(x={int(po.get('x', 0))}, y={int(po.get('y', 0))})")
             elif x.pack_options == {}:
                 code.add_line(f"self.{x.get_name()}.pack()")
             else:
@@ -1079,7 +1082,7 @@ for x in {x.get_name()}._buttons_dict.values():
             if mode == "place":
                 widget.pack_options = {k: v for k, v in widget.pack_info().items() if k != "in"}
                 po = {"x": int(widget.winfo_x()), "y": int(widget.winfo_y()), "width": max(1,int(widget.winfo_width())), "height": max(1,int(widget.winfo_height()))}
-                widget.pack_forget(); widget.place(**po); widget.place_options = po; self.bind_free_drag(widget)
+                widget.pack_forget(); widget.configure(width=po["width"], height=po["height"]); widget.place(x=po["x"], y=po["y"]); widget.place_options = po; self.bind_free_drag(widget)
             else:
                 handle = getattr(widget, "_free_resize_handle", None)
                 if handle is not None:
@@ -1115,7 +1118,6 @@ for x in {x.get_name()}._buttons_dict.values():
                     sx,sy,w0,h0 = target._free_resize_start
                     width,height = max(40,w0+e.x_root-sx),max(24,h0+e.y_root-sy)
                     target.configure(width=width,height=height)
-                    target.place_configure(width=width,height=height)
                     target.place_options = {"x":int(target.winfo_x()),"y":int(target.winfo_y()),"width":int(width),"height":int(height)}
                     self._position_resize_handle(target)
                 def resize_stop(e, target=widget): target._free_resize_start = None
@@ -1159,7 +1161,7 @@ for x in {x.get_name()}._buttons_dict.values():
         if self.layout_mode == "place":
             mx = new_widget.master.winfo_rootx() - self.r.winfo_rootx(); my = new_widget.master.winfo_rooty() - self.r.winfo_rooty()
             po = {"x":max(0,int(x-mx)),"y":max(0,int(y-my)),"width":max(80,new_widget.winfo_reqwidth()),"height":max(28,new_widget.winfo_reqheight())}
-            new_widget.place(**po); new_widget.place_options = po; self.bind_free_drag(new_widget)
+            new_widget.configure(width=po["width"], height=po["height"]); new_widget.place(x=po["x"], y=po["y"]); new_widget.place_options = po; self.bind_free_drag(new_widget)
         else: new_widget.pack(padx=(0, 0), pady=(0, 0))
 
         if new_widget.__class__ == SegmentedButton:
