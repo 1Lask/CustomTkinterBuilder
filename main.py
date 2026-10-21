@@ -490,7 +490,11 @@ for x in {x.get_name()}._buttons_dict.values():
                         p += f"{key}={modified_pack_options[key]}, "
 
                 p = p[0:-2]
-                code.add_line(f"{x.get_name()}.pack({p})")
+                if self.layout_mode == "place":
+                    po = getattr(x, "place_options", {}) or {"x": int(x.winfo_x()), "y": int(x.winfo_y()), "width": max(1, int(x.winfo_width())), "height": max(1, int(x.winfo_height()))}
+                    code.add_line(f"{x.get_name()}.place(x={int(po.get('x', 0))}, y={int(po.get('y', 0))}, width={int(po.get('width', 100))}, height={int(po.get('height', 30))})")
+                else:
+                    code.add_line(f"{x.get_name()}.pack({p})")
                 if run:
                     code.add_line(f"{x.get_name()}._set_appearance_mode('{'light' if self.appearance.get() == 0 else 'dark'}')")
                     if x.get_class() == "CTkScrollableFrame":
@@ -547,6 +551,12 @@ for x in {x.get_name()}._buttons_dict.values():
                 d = json.load(openfile)
             d = d["MAIN-FRAME-1"]
 
+            self.layout_mode = d.get("layout_mode", "pack")
+            try:
+                switch = self.r.winfo_toplevel().free_layout_switch
+                switch.select() if self.layout_mode == "place" else switch.deselect()
+            except Exception:
+                pass
             self.r.props = d["parameters"]
             self.r._inner_id = d["ID"]
             for key in list(d["parameters"].keys()):
@@ -562,6 +572,7 @@ for x in {x.get_name()}._buttons_dict.values():
             d.pop("parameters")
             d.pop("pack_options")
             d.pop("ID")
+            d.pop("layout_mode", None)
 
             self.theme_manager = ThemeUtl(theme_dir=f"Themes", theme_name=d["theme"])
             self.theme = self.theme_manager.get_theme_by_name()
@@ -814,6 +825,7 @@ for x in {x.get_name()}._buttons_dict.values():
             self.loop_save(self.widgets, self.r.get_name(), self.s)
             self.s = self.s[self.r.get_name()]
             self.s[self.r.get_name()]["theme"] = self.theme_manager.name
+            self.s[self.r.get_name()]["layout_mode"] = self.layout_mode
             self.s[self.r.get_name()]["palette_on_change"] = self.properties.color_manager.on_change_list
             self.s[self.r.get_name()]["palette"] = self.properties.color_manager.colors
             self.file = [dir_, name]
@@ -986,7 +998,10 @@ for x in {x.get_name()}._buttons_dict.values():
                 if x.type == "FRAME" and not x._bool_change(x.propagate_on_pack):
                     code.add_line(f"self.{x.get_name()}.pack_propagate({x._bool_change(x.propagate_on_pack)})")
 
-            if x.pack_options == {}:
+            if self.layout_mode == "place":
+                po = getattr(x, "place_options", {}) or {"x": int(x.winfo_x()), "y": int(x.winfo_y()), "width": max(1, int(x.winfo_width())), "height": max(1, int(x.winfo_height()))}
+                code.add_line(f"self.{x.get_name()}.place(x={int(po.get('x', 0))}, y={int(po.get('y', 0))}, width={int(po.get('width', 100))}, height={int(po.get('height', 30))})")
+            elif x.pack_options == {}:
                 code.add_line(f"self.{x.get_name()}.pack()")
             else:
                 p = ""
