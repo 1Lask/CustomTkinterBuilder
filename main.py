@@ -1080,9 +1080,30 @@ for x in {x.get_name()}._buttons_dict.values():
         try:
             widget.update_idletasks()
             if mode == "place":
+                # Capture pack settings only while the widget is actually managed by pack.
                 widget.pack_options = {k: v for k, v in widget.pack_info().items() if k != "in"}
-                po = {"x": int(widget.winfo_x()), "y": int(widget.winfo_y()), "width": max(1,int(widget.winfo_width())), "height": max(1,int(widget.winfo_height()))}
-                widget.pack_forget(); widget.configure(width=po["width"], height=po["height"]); widget.place(x=po["x"], y=po["y"]); widget.place_options = po; self.bind_free_drag(widget)
+                # Keep the last free-layout geometry when switching back and forth.
+                # Only derive an initial place position the first time this widget enters free mode.
+                po = getattr(widget, "place_options", None)
+                if not isinstance(po, dict) or not all(k in po for k in ("x", "y", "width", "height")):
+                    po = {
+                        "x": int(widget.winfo_x()),
+                        "y": int(widget.winfo_y()),
+                        "width": max(1, int(widget.winfo_width())),
+                        "height": max(1, int(widget.winfo_height())),
+                    }
+                else:
+                    po = {
+                        "x": max(0, int(po["x"])),
+                        "y": max(0, int(po["y"])),
+                        "width": max(1, int(po["width"])),
+                        "height": max(1, int(po["height"])),
+                    }
+                widget.pack_forget()
+                widget.configure(width=po["width"], height=po["height"])
+                widget.place(x=po["x"], y=po["y"])
+                widget.place_options = po
+                self.bind_free_drag(widget)
             else:
                 handle = getattr(widget, "_free_resize_handle", None)
                 if handle is not None:
