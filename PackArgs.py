@@ -19,8 +19,11 @@ class PackArgs:
             return
 
         try:
-            self.pack_forget()
-            self.pack(**options)
+            # Update geometry options without removing/reinserting the widget.
+            # pack_forget() followed by pack() can change the widget's order in
+            # the layout, making another widget move under the pointer and get
+            # selected while the user is editing Padx/Pady.
+            self.pack_configure(**options)
         except Exception:
             # Keep the chosen values so they can be restored when pack mode
             # is active again, even if this widget cannot currently be packed.
