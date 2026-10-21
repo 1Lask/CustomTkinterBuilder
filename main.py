@@ -346,6 +346,9 @@ root.mainloop()
         for x in list(d.keys()):
             if x.props == {}:
                 code.add_line(f"{x.get_name()} = {x.get_class()}(master={parent})")
+                if self.layout_mode == "place":
+                    po = getattr(x, "place_options", {}) or {"x": int(x.winfo_x()), "y": int(x.winfo_y()), "width": max(1, int(x.winfo_width())), "height": max(1, int(x.winfo_height()))}
+                    code.add_line(f"{x.get_name()}.place(x={int(po.get('x', 0))}, y={int(po.get('y', 0))}, width={int(po.get('width', 100))}, height={int(po.get('height', 30))})")
                 if x.type == "FRAME" and not x._bool_change(x.propagate_on_pack):
                     code.add_line(f"{x.get_name()}.pack_propagate({x._bool_change(x.propagate_on_pack)})")
             else:
