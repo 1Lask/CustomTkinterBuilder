@@ -12,12 +12,10 @@ class Main(CTkFrame, BaseWidgetClass):
         self.size = None
         self.pack_options = {}
         self.pack_propagate(False)
-        #self.configure(bg_color=self.master.cget("fg_color"))
         self.order = 0
         self.num = None
         self.name = None
 
-        #self.bind("<B1-Motion>", self.on_drag_motion)
         self.props = {}
 
     def __repr__(self):
@@ -47,7 +45,6 @@ class Main(CTkFrame, BaseWidgetClass):
             hidden_area = (content_height - visible_area)
             offset = hidden_area // 2
             offset += 50
-            #print(offset, hidden_area, content_height, visible_area)
 
             main.vert_max_offset = abs(offset)
 
@@ -56,9 +53,6 @@ class Main(CTkFrame, BaseWidgetClass):
             hidden_area = (content_height - visible_area)
             offset = hidden_area // 2
             offset += 50
-            #print(offset, hidden_area, content_height, visible_area)
-
-            # self.vert_scrlbar.set(scrollbar_position, scrollbar_height+scrollbar_position)
 
             main.horiz_max_offset = abs(offset)
 
@@ -67,7 +61,6 @@ class Main(CTkFrame, BaseWidgetClass):
             main_window.place(x=0, y=0)
 
     def configure(self, require_redraw=False, **kwargs):
-        #print(kwargs)
         super().configure(require_redraw, **kwargs)
 
 
@@ -81,30 +74,8 @@ class Main(CTkFrame, BaseWidgetClass):
         self.name = name
 
     def on_drag_start(self, event):
-        #self._drag_start_x = event.x
-        #self._drag_start_y = event.y
         self.properties.destroy_children()
-        #self.properties.add_seperator("Properties")
         self.properties.add_option(self.properties.GEOMETRY_CONTENT, "Width", "SPINBOX", "Width", {"to": 500, "from": 0, "val": int(self.cget("width")), "callback": lambda val: self.save(lambda val: self.configure(width=val), "width", int(val), int(val))})
         self.properties.add_option(self.properties.GEOMETRY_CONTENT, "Height", "SPINBOX", "Height", {"to": 500, "from": 0, "val": int(self.cget("height")), "callback": lambda val: self.save(lambda val: self.configure(height=val), "height", int(val), int(val))})
         self.properties.add_option(self.properties.GEOMETRY_CONTENT, "Title", "TEXT", "title", {"val": self.properties.main.title, "callback": lambda val: self.save(lambda val: self.properties.main.change(title=val), "title", val, val)})
         self.properties.add_option(self.properties.STYLES, "FG Color", "COLOR_COMBO", "fg_color", {"color": self.cget("fg_color"), "key": "fg_color", "transparent": True, "callback": lambda val: self.save(lambda val: self.configure(fg_color=val), "fg_color", val, val)})
-
-        self.on_drag_motion(event)  # Some awkward problem
-
-
-
-    def on_drag_motion(self, event):
-        #x = self.winfo_x() - self._drag_start_x + event.x
-        #y = self.winfo_y() - self._drag_start_y + event.y
-        #self.properties.update_options("X", "SPINBOX", {"val": int(x)})
-        #self.properties.update_options("Y", "SPINBOX", {"val": int(y)})
-
-        pass
-        #self.properties.update_options("Width", "SPINBOX", {"val": int(self.cget("width"))})
-        #self.properties.update_options("Height", "SPINBOX", {"val": int(self.cget("height"))})
-        #self.properties.update_options("Text", "TEXT", {"val": self.cget("text")})
-        #self.properties.update_options("Corner Radius", "SPINBOX", {"val": self.cget("corner_radius")})
-        #self.properties.update_options("Border Width", "SPINBOX", {"val": self.cget("border_width")})
-
-        #self.place(x=x, y=y)

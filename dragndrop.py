@@ -1,5 +1,4 @@
 from customtkinter import CTkLabel
-from icecream import ic
 
 from Widgets.SegmentedButton import SegmentedButton
 from Widgets.ScrollableFrame import ScrollableFrame
@@ -26,33 +25,23 @@ class DragManager:
             w.bind("<Leave>", lambda e: self.set_on_top(False, e.widget))
 
     def update_children(self, children):
-
         for w in children:
-
             if w.__class__ == SegmentedButton:
                 pass
-
             elif w.__class__ == ScrollableFrame:
-                ic("Found", w)
                 w.scrollwindow.bind("<Enter>", lambda e, w=w: self.set_on_top(True, w.scrollwindow))
                 w.scrollwindow.bind("<Leave>", lambda e, w=w: self.set_on_top(False, w.scrollwindow))
                 w.canv.bind("<Enter>", lambda e, w=w: self.set_on_top(True, w.scrollwindow))
                 w.canv.bind("<Leave>", lambda e, w=w: self.set_on_top(False, w.scrollwindow))
                 #w.scrollwindow.bind("<Enter>", print)
                 #w.scrollwindow.bind("<Leave>", print)
-
-
             else:
                 w.bind("<Enter>", lambda e: self.set_on_top(True, e.widget))
                 w.bind("<Leave>", lambda e: self.set_on_top(False, e.widget))
 
-
-
-
     def set_on_top(self, state, widget):
         self.onTop = state
         self.called_widget = widget
-
 
     def pressed(self, e):
         self.tip = CTkLabel(self.root, text=e)

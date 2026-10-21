@@ -57,7 +57,7 @@ def joinpath(rootdir, targetdir):
 
 escape_dict={'\a':r'\a',
            '\b':r'\b',
-           '\c':r'\c',
+           #'\c':r'\c',
            '\f':r'\f',
            '\n':r'\n',
            '\r':r'\r',
@@ -72,9 +72,10 @@ escape_dict={'\a':r'\a',
            '\4':r'\4',
            '\5':r'\5',
            '\6':r'\6',
-           '\7':r'\7',
-           '\8':r'\8',
-           '\9':r'\9'}
+           '\7':r'\7'
+           #'\8':r'\8',
+           #'\9':r'\9'
+           }
 
 def rawify(text):
     """Returns a raw string representation of text"""

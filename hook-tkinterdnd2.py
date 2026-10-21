@@ -6,7 +6,7 @@ Just put hook-tkinterdnd2.py in the same directory where you call pyinstaller an
     pyinstaller myproject/myproject.py --additional-hooks-dir=.
 """
 
-from PyInstaller.utils.hooks import collect_data_files, eval_statement
+from PyInstaller.utils.hooks import collect_data_files
 
 
 datas = collect_data_files('tkinterdnd2')

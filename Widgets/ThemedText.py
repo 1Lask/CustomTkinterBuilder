@@ -42,8 +42,6 @@ class Paragraph_1(Label):
 class WrappedParagraph(Label):
     def __init__(self, *args, properties, **kwargs):
         super().__init__(*args, properties=properties, **kwargs)
-        #self.save(lambda val: self.bind('<Configure>', lambda e: self.configure(wraplength=val)), "wraplength", self.winfo_width(), self.winfo_width())
-
         self.save(lambda val: self.configure(wraplength=val), "wraplength", int(200), int(200))
     def pack(self, **kwargs):
         super().pack(**kwargs)
