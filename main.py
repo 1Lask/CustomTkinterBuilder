@@ -1067,8 +1067,8 @@ for x in {x.get_name()}._buttons_dict.values():
     def set_layout_mode(self, mode):
         mode = "place" if mode in (True, "place", "free") else "pack"
         if mode == self.layout_mode: return
-        for widget, children in list(self.widgets[self.r].items()): self._switch_tree(widget, children, mode)
         self.layout_mode = mode
+        for widget, children in list(self.widgets[self.r].items()): self._switch_tree(widget, children, mode)
 
     def _switch_tree(self, widget, children, mode):
         try:
