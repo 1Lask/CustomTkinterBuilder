@@ -143,6 +143,7 @@ class MainWindow:
         self.horiz_max_offset = 100
         self.vert_max_offset = 100
         self.current_selected_widget = None
+        self.layout_mode = "pack"
         self.theme = self.theme_manager.get_theme_by_name()
         self.widget_colors = {
             "CTk": ["fg_color"],
@@ -737,8 +738,12 @@ for x in {x.get_name()}._buttons_dict.values():
             self.add_to_dict(self.widgets, self._parents, new_widget)
             self._parents = []
 
-            new_widget.pack(**d[x]["pack_options"])
-            new_widget.pack_options = d[x]["pack_options"]
+            new_widget.pack_options = d[x].get("pack_options", {}) or {}
+            new_widget.place_options = d[x].get("place_options", {}) or {}
+            if self.layout_mode == "place":
+                po = new_widget.place_options or {"x":10,"y":10,"width":max(80,new_widget.winfo_reqwidth()),"height":max(28,new_widget.winfo_reqheight())}
+                new_widget.place(**po); new_widget.place_options = po; self.bind_free_drag(new_widget)
+            else: new_widget.pack(**new_widget.pack_options)
 
             if new_widget.__class__ == SegmentedButton:
                 new_widget.configure(command=lambda e, nw=new_widget: (nw.on_drag_start(None), self.hierarchy.set_current_selection(nw)))
@@ -773,7 +778,8 @@ for x in {x.get_name()}._buttons_dict.values():
                 self.drag_manager.update_children(children=parent.winfo_children())
 
             d[x].pop("TYPE")
-            d[x].pop("pack_options")
+            d[x].pop("pack_options", None)
+            d[x].pop("place_options", None)
             d[x].pop("parameters")
             d[x].pop("ID")
 
@@ -901,10 +907,12 @@ for x in {x.get_name()}._buttons_dict.values():
                 if props["font_family"] == self.theme["CTkFont"][current_os]["family"]:
                     props.pop("font_family")
 
+            place_options = getattr(x, "place_options", {}) or {}
+            if self.layout_mode == "place": place_options = {"x":int(x.winfo_x()),"y":int(x.winfo_y()),"width":max(1,int(x.winfo_width())),"height":max(1,int(x.winfo_height()))}
             if x.get_class() == "CTkFrame":
-                code[parent][x.get_name()] = {"TYPE": x.type, "parameters": props, "pack_options": x.pack_options, "ID": x._inner_id, "PACK_PROPAGATE": x.propagate_on_pack}
+                code[parent][x.get_name()] = {"TYPE": x.type, "parameters": props, "pack_options": getattr(x,"pack_options",{}), "place_options": place_options, "ID": x._inner_id, "PACK_PROPAGATE": x.propagate_on_pack}
             else:
-                code[parent][x.get_name()] = {"TYPE": x.type, "parameters": props, "pack_options": x.pack_options, "ID": x._inner_id}
+                code[parent][x.get_name()] = {"TYPE": x.type, "parameters": props, "pack_options": getattr(x,"pack_options",{}), "place_options": place_options, "ID": x._inner_id}
 
             if d[x] != {}:
                 self.loop_save(d[x], x.get_name(), code[parent])
@@ -1041,6 +1049,37 @@ for x in {x.get_name()}._buttons_dict.values():
                 new_d[key] = self.loop_order_sort(value)
         return new_d
 
+    def set_layout_mode(self, mode):
+        mode = "place" if mode in (True, "place", "free") else "pack"
+        if mode == self.layout_mode: return
+        for widget, children in list(self.widgets[self.r].items()): self._switch_tree(widget, children, mode)
+        self.layout_mode = mode
+
+    def _switch_tree(self, widget, children, mode):
+        try:
+            widget.update_idletasks()
+            if mode == "place":
+                widget.pack_options = dict(widget.pack_info())
+                po = {"x": int(widget.winfo_x()), "y": int(widget.winfo_y()), "width": max(1,int(widget.winfo_width())), "height": max(1,int(widget.winfo_height()))}
+                widget.pack_forget(); widget.place(**po); widget.place_options = po; self.bind_free_drag(widget)
+            else:
+                widget.place_forget(); widget.pack(**(getattr(widget,"pack_options",{}) or {"padx":(0,0),"pady":(0,0)}))
+        except Exception: pass
+        for child, grandchildren in list(children.items()): self._switch_tree(child, grandchildren, mode)
+
+    def bind_free_drag(self, widget):
+        if getattr(widget, "_free_drag_bound", False): return
+        widget._free_drag_bound = True
+        def start(e):
+            if self.layout_mode == "place": widget._free_drag_start = (e.x_root,e.y_root,widget.winfo_x(),widget.winfo_y())
+        def move(e):
+            if self.layout_mode != "place" or not getattr(widget,"_free_drag_start",None): return
+            sx,sy,x0,y0 = widget._free_drag_start
+            x,y = max(0,x0+e.x_root-sx),max(0,y0+e.y_root-sy)
+            widget.place_configure(x=x,y=y)
+            widget.place_options = {"x":int(x),"y":int(y),"width":max(1,widget.winfo_width()),"height":max(1,widget.winfo_height())}
+        def stop(e): widget._free_drag_start = None
+        widget.bind("<ButtonPress-1>",start,add="+"); widget.bind("<B1-Motion>",move,add="+"); widget.bind("<ButtonRelease-1>",stop,add="+")
     def add_widget(self, w, properties, widget, x=0, y=0):
         if widget.master.master.__class__ == ScrollableFrame:
             new_widget = w(master=widget.master.master.get_me(), **properties)
@@ -1065,7 +1104,12 @@ for x in {x.get_name()}._buttons_dict.values():
         self.id_mapped_widgets[new_widget._inner_id] = new_widget
         self._parents = []
         new_widget.configure(bg_color="transparent")
-        new_widget.pack(padx=(0, 0), pady=(0, 0))
+        new_widget.pack_options = getattr(new_widget, "pack_options", {}) or {"padx": (0,0), "pady": (0,0)}
+        if self.layout_mode == "place":
+            mx = new_widget.master.winfo_rootx() - self.r.winfo_rootx(); my = new_widget.master.winfo_rooty() - self.r.winfo_rooty()
+            po = {"x":max(0,int(x-mx)),"y":max(0,int(y-my)),"width":max(80,new_widget.winfo_reqwidth()),"height":max(28,new_widget.winfo_reqheight())}
+            new_widget.place(**po); new_widget.place_options = po; self.bind_free_drag(new_widget)
+        else: new_widget.pack(padx=(0, 0), pady=(0, 0))
 
         if new_widget.__class__ == SegmentedButton:
             new_widget.configure(command=lambda e, nw=new_widget: (nw.on_drag_start(None), self.hierarchy.set_current_selection(nw)))
@@ -1668,6 +1712,9 @@ class App(CTkToplevel):
         if darkdetect.isDark():
             self.appearance_mode_switch.toggle()
         self.appearance_mode_switch.configure(command=lambda: self.main.change_appearance_mode(self.appearance_mode_switch.get()))
+        self.free_layout_switch = CTkSwitch(self.tool_bar, text="Modo Livre", text_color="white")
+        self.free_layout_switch.pack(side="left", padx=5, pady=5)
+        self.free_layout_switch.configure(command=lambda: self.main.set_layout_mode("place" if self.free_layout_switch.get() else "pack"))
 
         self.widget_panel = CTkTabview(self, width=250)
         self.widget_panel.pack(side=LEFT, padx=10, pady=(0, 10), fill="y")
