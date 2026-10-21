@@ -166,6 +166,15 @@ class MainWindow:
             "DropdownMenu": ["fg_color", "hover_color", "text_color"]
         }
 
+    def change(self, **kwargs):
+        """Update main-window properties from the properties panel."""
+        if "title" in kwargs:
+            self.title = str(kwargs["title"])
+            try:
+                self.r.winfo_toplevel().title(self.title)
+            except Exception:
+                pass
+
     def change_appearance_mode(self, mode):
         if mode == 0:
             mode = "light"
