@@ -7,9 +7,24 @@ class PackArgs:
         self.options = val
 
     def redraw(self, **kwargs):
-        self.pack_options = kwargs
-        self.pack_options.pop("in")
-        self.properties.main.redraw(self.properties.main.widgets[self.properties.main.r])
+        # Re-apply pack options directly to this widget. MainWindow does not
+        # implement a redraw() method; trying to call it breaks every pack
+        # layout property callback (Fill, Expand, Side, Padx and Pady).
+        options = dict(kwargs)
+        options.pop("in", None)
+        self.pack_options = dict(options)
+
+        main = getattr(getattr(self, "properties", None), "main", None)
+        if getattr(main, "layout_mode", "pack") != "pack":
+            return
+
+        try:
+            self.pack_forget()
+            self.pack(**options)
+        except Exception:
+            # Keep the chosen values so they can be restored when pack mode
+            # is active again, even if this widget cannot currently be packed.
+            pass
 
     def default(self):
         # The layout properties must match the active geometry manager.
