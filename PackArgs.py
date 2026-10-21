@@ -30,8 +30,8 @@ class PackArgs:
                     self.place_options = {
                         "x": int(float(current.get("x", x) or 0)),
                         "y": int(float(current.get("y", y) or 0)),
-                        "width": max(1, int(self.winfo_width())),
-                        "height": max(1, int(self.winfo_height())),
+                        "width": max(1, int(self.cget("width"))),
+                        "height": max(1, int(self.cget("height"))),
                     }
                 except Exception:
                     pass
