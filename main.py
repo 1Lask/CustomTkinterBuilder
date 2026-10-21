@@ -1078,23 +1078,56 @@ for x in {x.get_name()}._buttons_dict.values():
                 po = {"x": int(widget.winfo_x()), "y": int(widget.winfo_y()), "width": max(1,int(widget.winfo_width())), "height": max(1,int(widget.winfo_height()))}
                 widget.pack_forget(); widget.place(**po); widget.place_options = po; self.bind_free_drag(widget)
             else:
+                handle = getattr(widget, "_free_resize_handle", None)
+                if handle is not None:
+                    try: handle.destroy()
+                    except Exception: pass
+                    widget._free_resize_handle = None
                 widget.place_forget(); widget.pack(**(getattr(widget,"pack_options",{}) or {"padx":(0,0),"pady":(0,0)}))
         except Exception: pass
         for child, grandchildren in list(children.items()): self._switch_tree(child, grandchildren, mode)
 
     def bind_free_drag(self, widget):
-        if getattr(widget, "_free_drag_bound", False): return
-        widget._free_drag_bound = True
-        def start(e):
-            if self.layout_mode == "place": widget._free_drag_start = (e.x_root,e.y_root,widget.winfo_x(),widget.winfo_y())
-        def move(e):
-            if self.layout_mode != "place" or not getattr(widget,"_free_drag_start",None): return
-            sx,sy,x0,y0 = widget._free_drag_start
-            x,y = max(0,x0+e.x_root-sx),max(0,y0+e.y_root-sy)
-            widget.place_configure(x=x,y=y)
-            widget.place_options = {"x":int(x),"y":int(y),"width":max(1,widget.winfo_width()),"height":max(1,widget.winfo_height())}
-        def stop(e): widget._free_drag_start = None
-        widget.bind("<ButtonPress-1>",start,add="+"); widget.bind("<B1-Motion>",move,add="+"); widget.bind("<ButtonRelease-1>",stop,add="+")
+        if not getattr(widget, "_free_drag_bound", False):
+            widget._free_drag_bound = True
+            def start(e):
+                if self.layout_mode == "place": widget._free_drag_start = (e.x_root,e.y_root,widget.winfo_x(),widget.winfo_y())
+            def move(e):
+                if self.layout_mode != "place" or not getattr(widget,"_free_drag_start",None): return
+                sx,sy,x0,y0 = widget._free_drag_start
+                x,y = max(0,x0+e.x_root-sx),max(0,y0+e.y_root-sy)
+                widget.place_configure(x=x,y=y)
+                widget.place_options = {"x":int(x),"y":int(y),"width":max(1,widget.winfo_width()),"height":max(1,widget.winfo_height())}
+                self._position_resize_handle(widget)
+            def stop(e): widget._free_drag_start = None
+            widget.bind("<ButtonPress-1>",start,add="+"); widget.bind("<B1-Motion>",move,add="+"); widget.bind("<ButtonRelease-1>",stop,add="+")
+        if getattr(widget, "_free_resize_handle", None) is None:
+            try:
+                handle = CTkLabel(widget.master, text="◢", width=14, height=14, corner_radius=2, fg_color="#3B82F6", text_color="white")
+                widget._free_resize_handle = handle
+                def resize_start(e, target=widget):
+                    target._free_resize_start = (e.x_root,e.y_root,max(40,target.winfo_width()),max(24,target.winfo_height()))
+                def resize_move(e, target=widget):
+                    if self.layout_mode != "place" or not getattr(target,"_free_resize_start",None): return
+                    sx,sy,w0,h0 = target._free_resize_start
+                    width,height = max(40,w0+e.x_root-sx),max(24,h0+e.y_root-sy)
+                    target.configure(width=width,height=height)
+                    target.place_configure(width=width,height=height)
+                    target.place_options = {"x":int(target.winfo_x()),"y":int(target.winfo_y()),"width":int(width),"height":int(height)}
+                    self._position_resize_handle(target)
+                def resize_stop(e, target=widget): target._free_resize_start = None
+                handle.bind("<ButtonPress-1>",resize_start); handle.bind("<B1-Motion>",resize_move); handle.bind("<ButtonRelease-1>",resize_stop)
+            except Exception:
+                widget._free_resize_handle = None
+        self._position_resize_handle(widget)
+
+    def _position_resize_handle(self, widget):
+        handle = getattr(widget, "_free_resize_handle", None)
+        if handle is None or self.layout_mode != "place": return
+        try:
+            handle.place(x=int(widget.winfo_x()+widget.winfo_width()-12), y=int(widget.winfo_y()+widget.winfo_height()-12))
+            handle.lift()
+        except Exception: pass
     def add_widget(self, w, properties, widget, x=0, y=0):
         if widget.master.master.__class__ == ScrollableFrame:
             new_widget = w(master=widget.master.master.get_me(), **properties)
