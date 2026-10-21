@@ -1,80 +1,59 @@
-# Welcome To Custom Tkinter Builder
+# CustomTkinter Builder — Free Layout Switch
 
-This is a Free and Open Source [RAD](https://en.wikipedia.org/wiki/Rapid_application_development) tool for [Custom Tkinter](https://github.com/TomSchimansky/CustomTkinter). This software allows you to create complex UI faster than ever⚡
+CustomTkinter Builder is a free and open-source visual UI builder for [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter). It helps you create interfaces visually and export them as Python code.
 
-## Important announcement
->I built CustomTkinter Builder when I was around 15 years old. Looking back, the code I wrote is quite messy, making it incredibly difficult to fix issues and refactor today. Still, I have learned a lot from this project.
+This branch, `feature/free-layout-switch`, builds on the original project by adding a switchable free-positioning workflow while retaining the original `pack()` layout workflow.
 
->During development, I realized that CustomTkinter itself can be buggy, requiring a lot of workarounds to function as desired. The original maintainer has also lost interest in continuing its development. While a community-driven fork called Custom2kinter has been launched, I don't see much point in building on it right now. For larger projects, the library's lag is a real issue - it is CPU-based and draws everything on the tkinter canvas to achieve its modern look. While I still love tkinter for its simplicity, libraries like Flet, Kivy, and PyQt5 are much faster and more efficient (although the learning curve is a bit high).
+> **Project status:** This is a community-maintained modification on a feature branch of the original project. It is not an official release from the original author. Please check the repository's [Releases](https://github.com/1Lask/CustomTkinterBuilder/releases) for available builds.
 
->I originally started this project because there weren’t any free and open-source options available; the only feature-rich tool at the time was paid software, [CTkDesigner](https://github.com/Akascape/CTkDesigner-Support). However, just a few days ago, I saw a new free and open-source tool named [CTkMaker](https://github.com/kandelucky/ctk_maker) that looks very promising. The developer mentioned in a [CustomTkinter discussion](https://github.com/TomSchimansky/CustomTkinter/discussions/2801) that the whole thing was "vibe coded" in 17 days, which I appreciate the honesty of. It took me two months of development during my summer vacation to reach a similar level! I recently tried refactoring my own code with the help of AI coding agents, but the codebase is so tangled that even they are having a hard time. Moving forward, I highly recommend checking out tools like CTkMaker.
+## What's new in this branch
 
->Another major factor for this repository going dormant is that I am finishing my schooling next year. I am currently enrolled in coaching classes for college entrance exams, which takes up all the time I used to spend programming.
+### Switch between layout modes
 
->For all the reasons mentioned above, **CustomTkinter Builder will no longer be receiving updates**. *Thank you to everyone who used and supported the project.*
+- **Pack mode (`pack()`)** — keeps the original layout workflow, including its packing options.
+- **Free layout mode (`place()`)** — position widgets using explicit X/Y coordinates.
+- Switch between modes from the application without losing the saved free-layout coordinates.
+- Existing projects that do not contain layout-mode information default to Pack mode for compatibility.
 
+### Move and resize widgets
 
-<a href="https://www.producthunt.com/posts/custom-tkinter-builder?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-custom&#0045;tkinter&#0045;builder" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=750366&theme=neutral" alt="Custom&#0032;Tkinter&#0032;Builder - The&#0032;free&#0032;and&#0032;open&#0032;source&#0032;UI&#0032;builder&#0032;for&#0032;CustomTkinter✨ | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+- Drag widgets to reposition them while using free layout mode.
+- Resize widgets using the visual resize handle.
+- Edit X, Y, width, and height in the properties panel while in free layout mode.
+- Edit the original Pack options, such as side, fill, expand, and padding, while in Pack mode.
 
+### Save and export
 
-![Software](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/77efd633-461e-4d30-be27-3d5d61045aa6)
+- Save project layout information in the project's JSON file, including the selected layout mode and free-positioning geometry.
+- Export Python code in both standard and object-oriented (OOP) formats.
+- Generated code supports the selected layout manager, including `place()` geometry for free-layout projects.
 
-# Features
+### Additional fixes
 
-* ✅ **Drag and Drop** user interface
-* ✅ Adjust **all the parameters** of all the widgets.
-* ✅ Supports responsive **Pack** method
-* ✅ Supports **15/16 core widgets**
-* ✅ Includes **10 pre customized** widgets
-* ✅ Includes **inbuilt icon** support (more than **2000** ready to use icons with 5 different styles and customisable color)
-* ✅ Includes **Palette** which allows the users to change the colors of a UI with a single click of a button.
-* ✅ Supports **Scrollable Frame** (Vertical and Horizontal)
-* ✅ Export to .py (OOP and standard)
-* ✅ Save project (.json)
-* ✅ Duplicate widgets, Delete Widgets, Change order of widgets and Change parent of widgets
-* ✅ Visualize the structure of your UI with the inbuilt **Hierarchy Panel**
-* ✅ Allows users to work on both **light** and **dark** mode of the UI
-* ✅ Add images, change fonts, etc
+- Apply widget padding changes without unnecessarily removing and reinserting the widget, helping preserve widget order and selection.
+- Update the main preview window title from the properties panel.
+- Handle CustomTkinter widget dimensions correctly when applying `place()` geometry.
 
-# Examples
+These changes are part of the feature branch and may not be present in the original project's published release.
 
-## Login
-### Dark Mode
-![Dark Mode - Login](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/133ef73f-3b55-4181-bf78-a4ba1e9b19a3)
-### Light Mode
-![Light Mode - Login](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/482ed8c3-0573-4103-9aa6-45d0258eacdf)
+## Features from the original project
 
+- Visual, drag-and-drop interface building.
+- Configure widget properties.
+- Support for the original `pack()` layout workflow and the added `place()` free-layout workflow.
+- Built-in widget presets and icon support.
+- Palette tools for changing UI colors.
+- Vertical and horizontal scrollable frames.
+- Export Python code in standard or OOP format.
+- Save and reopen projects as JSON.
+- Duplicate and delete widgets, change their order, and change their parent.
+- Inspect the interface hierarchy using the hierarchy panel.
+- Work with light and dark appearance modes.
+- Add images and customize fonts.
 
-## Music Player
-### Dark Mode
-![Dark Mode - Spotify](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/28970507-3125-4cd8-bb42-d6a7d3fee359)
-### Light Mode
-![Light Mode - Spotify](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/eb2a3b08-02ac-4bea-bf5f-9da723bb6101)
+## Available widgets
 
-## Video Library
-![Youtube](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/612572d7-456c-45ef-aeff-ea1108cbf995)
-
-
-# Download Now 👇
-<br> <p align='center'> [<img src="https://img.shields.io/badge/Download-Custom%20Tkinter%20Builder-informational?&logo=python&logoColor=yellow&color=green" width="350">](https://github.com/rigvedmaanas/CustomTkinterBuilder/releases/tag/v1.0.0)  </br>
-
-
-## Install with pip
-
-```bash
-pip install CustomTkinterBuilder
-customtkinterbuilder
-```
-
-## Update to latest version
-
-```bash
-customtkinterbuilder --update
-```
-
-User settings are now stored in the OS user config directory and are preserved across updates.
-
-# Available Widgets
+The original project includes these widget types:
 
 - Frame
 - Button
@@ -95,20 +74,69 @@ User settings are now stored in the OS user config directory and are preserved a
 - Vertical Scrollbar
 - Horizontal Scrollbar
 
-***Please do star the project if you like it***
+## Screenshots and examples
 
+The images below are from the original project's README and demonstrate its existing UI-building capabilities.
 
-# Documentation
+### Login
 
-Detailed documentation of the project is available [here](https://github.com/rigvedmaanas/CustomTkinterBuilder/wiki).
+**Dark mode**
 
-# Upcoming Features
+![Dark Mode - Login](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/133ef73f-3b55-4181-bf78-a4ba1e9b19a3)
 
-- [ ] Support for place and grid manager
-- [ ] Support other libraries (Video Player, GIF Player, Slide View, Graph, Code Viewer, etc)
-- [ ] Support for Tree View
-- [ ] Support for Tab View
+**Light mode**
 
-# Licence
+![Light Mode - Login](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/482ed8c3-0573-4103-9aa6-45d0258eacdf)
 
-The software `Custom Tkinter Builder` comes under GNU License while the project file and the code generated by Custom Tkinter Builder belongs to the user and does not belong to `Custom Tkinter Builder`
+### Music player
+
+**Dark mode**
+
+![Dark Mode - Spotify](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/28970507-3125-4cd8-bb42-d6a7d3fee359)
+
+**Light mode**
+
+![Light Mode - Spotify](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/eb2a3b08-02ac-4bea-bf5f-9da723bb6101)
+
+### Video library
+
+![Video library](https://github.com/rigvedmaanas/CustomTkinterBuilder/assets/77579661/612572d7-456c-45ef-aeff-ea1108cbf995)
+
+## Download
+
+Check the [GitHub Releases page](https://github.com/1Lask/CustomTkinterBuilder/releases) for available downloads. A Windows executable can be attached to a release when a build is published.
+
+## Run from source
+
+Python and the dependencies listed in `requirements.txt` are required.
+
+```powershell
+git clone https://github.com/1Lask/CustomTkinterBuilder.git
+cd CustomTkinterBuilder
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe main.py
+```
+
+To try the free-layout changes, check out the `feature/free-layout-switch` branch:
+
+```powershell
+git switch feature/free-layout-switch
+```
+
+## Documentation
+
+The original project's [Wiki](https://github.com/rigvedmaanas/CustomTkinterBuilder/wiki) may still be useful for features that have not changed.
+
+## Credits and acknowledgements
+
+- **Original project:** [CustomTkinter Builder by Rigved Maana](https://github.com/rigvedmaanas/CustomTkinterBuilder). The original project, its existing features, and its assets remain credited to their respective creators.
+- **Feature-branch maintainer:** [1Lask](https://github.com/1Lask), for maintaining this repository branch and integrating the changes.
+- **AI development assistance:** ChatGPT by OpenAI assisted with implementation planning, code changes, debugging, and documentation for the free-layout feature and related fixes. ChatGPT is an AI assistant, not a human contributor or copyright holder.
+
+This acknowledgement does not imply that OpenAI or the original author officially endorses this branch.
+
+## License
+
+Please refer to the repository's [LICENSE](LICENSE) file for the applicable license. The original README states that projects and code generated with CustomTkinter Builder belong to the user; consult the license and original project terms for details.
