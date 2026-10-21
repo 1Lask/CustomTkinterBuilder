@@ -4,6 +4,8 @@ import shutil
 import threading
 import tkinter.messagebox
 import uuid
+import sys
+import os
 from tkinter import messagebox
 from tkinter.colorchooser import askcolor
 
@@ -39,6 +41,7 @@ from theme_colors import get_ui_color
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
 #blockPrint()
+
 class ThemeUtl:
     def __init__(self, theme_dir, theme_name):
         path = resource_path(os.path.join(theme_dir, f"{theme_name}.json"))
@@ -61,7 +64,7 @@ class SaveFileDialog(CTkToplevel):
         self.after(100, lambda: self.iconphoto(False, self.iconpath))
 
         if theme:
-            self.geometry("500x380+600+200")
+            self.geometry("450x350+600+200")
             self.title("Novo Projeto")
         else:
             self.geometry("500x280+600+200")
@@ -72,7 +75,7 @@ class SaveFileDialog(CTkToplevel):
 
         self.project_name_entry = CTkEntry(self, placeholder_text="Digite nome para o projeto")
         self.project_name_entry.pack(padx=20, pady=10, fill="x")
-        self.project_name_entry.insert(0, "sem título")
+        self.project_name_entry.insert(0, "Sem título")
 
         self.fr = CTkFrame(self, fg_color="transparent")
         self.fr.pack(fill="x")
@@ -98,11 +101,18 @@ class SaveFileDialog(CTkToplevel):
             self.theme_entry = CTkOptionMenu(self.f, values=["green", "blue", "dark-blue"])
             self.theme_entry.pack(padx=20, pady=(0, 20), fill="x", side="left", expand=True)
 
-            self.save_btn = CTkButton(self, text="Save", height=35, command=lambda: (
-            self.callback(dir_=self.dir_entry.get(), name=self.project_name_entry.get(), theme=self.theme_entry.get()), self.destroy()))
+            # Adicionado self.destroy() para fechar a janela ao salvar com tema
+            self.save_btn = CTkButton(self, text="Salvar", height=35, command=lambda: (
+                self.callback(dir_=self.dir_entry.get(), name=self.project_name_entry.get(), theme=self.theme_entry.get()), 
+                self.destroy()
+            ))
             self.save_btn.pack(fill="x", padx=20, pady=20)
         else:
-            self.save_btn = CTkButton(self, text="Save", height=35, command=lambda: (self.callback(dir_=self.dir_entry.get(), name=self.project_name_entry.get()), self.destroy()))
+            # Adicionado self.destroy() para fechar a janela no salvamento normal
+            self.save_btn = CTkButton(self, text="Salvar", height=35, command=lambda: (
+                self.callback(dir_=self.dir_entry.get(), name=self.project_name_entry.get()), 
+                self.destroy()
+            ))
             self.save_btn.pack(fill="x", padx=20, pady=20)
 
     def choose_dir(self):
@@ -223,11 +233,6 @@ class MainWindow:
 
         if widget.__class__ in [ComboBox, OptionMenu]:
             widget.set_nonvisible_disable()
-
-    def change(self, **kwargs):
-        for key in list(kwargs.keys()):
-            if key == "title":
-                self.title = kwargs[key]
 
     def run_code(self):
         code = CodeGenerator(indentation="\t")
@@ -494,63 +499,16 @@ for x in {x.get_name()}._buttons_dict.values():
             if d[x] != {}:
                 self.loop_generate(d=d[x], parent=x.get_name(), code=code, run=run)
 
-    def open_file_without_asking(self):
-        self.close_current_project()
-        file = os.path.join(self.file[0], self.file[1])
-        shutil.rmtree(tempify('temp'))
-        shutil.copytree(os.path.join(file, "Assets"), tempify("temp"))
+    def launch_thread_with_message(self, target, args=(), kwargs={}):
+        def target_with_msg(*args, **kwargs):
+            target(*args, **kwargs)
+            self.hierarchy.update_list(self.widgets, 5)
+            self.destroy_loading()
 
-        with open(os.path.join(file, f"{os.path.basename(file)}.json"), 'r') as openfile:
-            d = json.load(openfile)
-        d = d["MAIN-FRAME-1"]
-
-        self.r.props = d["parameters"]
-        self.r._inner_id = d["ID"]
-        for key in list(d["parameters"].keys()):
-            if key == "width":
-                self.r.configure(width=d["parameters"]["width"])
-            elif key == "height":
-                self.r.configure(height=d["parameters"]["height"])
-            elif key == "fg_color":
-                self.r.configure(fg_color=d["parameters"]["fg_color"])
-            elif key == "title":
-                self.title = d["parameters"]["title"]
-        d.pop("TYPE")
-        d.pop("parameters")
-        d.pop("pack_options")
-        d.pop("ID")
-
-        self.theme_manager = ThemeUtl(theme_dir=f"Themes", theme_name=d["theme"])
-        self.theme = self.theme_manager.get_theme_by_name()
-        self.properties.color_manager.colors = d["palette"]
-        self.properties.color_manager.on_change_list = d["palette_on_change"]
-        d.pop("theme")
-        d.pop("palette")
-        d.pop("palette_on_change")
-        self.current_widget_count = IntVar(value=0)
-        self.current_widget_count.trace("w", self.changed_value)
-        self.widgetnumber = IntVar(value=1)
-        self.get_number_of_widgets(json.loads(json.dumps(d)))
-
-        self.launch_thread_with_message(target=self.loop_open, args=(d, self.r))
-
-    def changed_value(self, a, b, c):
-        try:
-            if (self.widgetnumber.get()-1) == self.current_widget_count.get():
-                self.edit_lbl.configure(text="Atualizando Hierarquia....")
-            self.lbl2.configure(text=f"{self.current_widget_count.get()}/{self.widgetnumber.get()}")
-            self.progressbar.step()
-        except Exception:
-            pass
-
-    def center(self, toplevel):
-        toplevel.update_idletasks()
-        screen_width = toplevel.winfo_screenwidth()
-        screen_height = toplevel.winfo_screenheight()
-        size = tuple(int(_) for _ in toplevel.geometry().split('+')[0].split('x'))
-        x = screen_width / 2 - size[0] / 2
-        y = screen_height / 2 - size[1] / 2
-        toplevel.geometry("+%d+%d" % (x, y))
+        self.show_loading()
+        thread = threading.Thread(target=target_with_msg, args=args, kwargs=kwargs)
+        thread.start()
+        return thread
 
     def show_loading(self):
         m = self.r.winfo_toplevel()
@@ -575,17 +533,6 @@ for x in {x.get_name()}._buttons_dict.values():
             self.loading_frame.destroy()
         except Exception:
             pass
-
-    def launch_thread_with_message(self, target, args=(), kwargs={}):
-        def target_with_msg(*args, **kwargs):
-            target(*args, **kwargs)
-            self.hierarchy.update_list(self.widgets, 5)
-            self.destroy_loading()
-
-        self.show_loading()
-        thread = threading.Thread(target=target_with_msg, args=args, kwargs=kwargs)
-        thread.start()
-        return thread
 
     def open_file(self):
         file = askdirectory()
@@ -628,6 +575,15 @@ for x in {x.get_name()}._buttons_dict.values():
             self.get_number_of_widgets(json.loads(json.dumps(d)))
 
             self.launch_thread_with_message(target=self.loop_open, args=(d, self.r))
+
+    def changed_value(self, a, b, c):
+        try:
+            if (self.widgetnumber.get()-1) == self.current_widget_count.get():
+                self.edit_lbl.configure(text="Atualizando Hierarquia....")
+            self.lbl2.configure(text=f"{self.current_widget_count.get()}/{self.widgetnumber.get()}")
+            self.progressbar.step()
+        except Exception:
+            pass
 
     def loop_open(self, d, parent, copy=False):
         for x in list(d.keys()):
@@ -871,7 +827,6 @@ for x in {x.get_name()}._buttons_dict.values():
             with open(get_settings_path(), 'w') as f:
                 f.write(json_object)
             short_name = name[0:2].upper()
-            # Tenta encontrar a janela principal de forma segura para chamar show_project
             try:
                 main_app = self.r
                 while hasattr(main_app, "master") and main_app.master is not None and not hasattr(main_app, "show_project"):
@@ -880,7 +835,7 @@ for x in {x.get_name()}._buttons_dict.values():
                 if hasattr(main_app, "show_project"):
                     main_app.show_project(short_name, name, dir_)
                 else:
-                    print("[DEBUG] Janela principal ou método show_project não encontrado, mas o projeto foi salvo.")
+                    print("[DEBUG] Janela principal salva com sucesso.")
             except Exception as e:
                 print(f"[DEBUG] Erro ao atualizar exibição do projeto: {e}")
                 messagebox.showinfo("Salvo", "Arquivo salvo com sucesso")
@@ -919,8 +874,6 @@ for x in {x.get_name()}._buttons_dict.values():
             if "image" in list(props.keys()):
                 img = ""
                 img_prop = x.props.get("image")
-                
-                # Trata se a imagem for um objeto CTkImage ou uma string (caminho salvo)
                 try:
                     if hasattr(img_prop, "cget"):
                         img_path = img_prop.cget("dark_image").filename
@@ -934,7 +887,6 @@ for x in {x.get_name()}._buttons_dict.values():
                 except Exception as e:
                     print(f"[DEBUG] Erro ao processar imagem no loop_save: {e}")
                 
-                # Garante tamanho padrão caso x.size não exista ou esteja incompleto
                 size = getattr(x, "size", [100, 100])
                 props["image"] = {"image": img, "size": size}
 
@@ -1060,24 +1012,6 @@ for x in {x.get_name()}._buttons_dict.values():
             else:
                 self.get_parents(widget.master)
 
-    def redraw(self, d):
-        for x in list(d.keys()):
-            if d[x] != {}:
-                if x.pack_options == {}:
-                    x.pack()
-                else:
-                    x.pack(**x.pack_options)
-                self.redraw(d[x])
-            else:
-                if x.pack_options == {}:
-                    x.pack()
-                else:
-                    x.pack(**x.pack_options)
-
-    def destroy_children(self):
-        for widget in self.r.winfo_children():
-            widget.destroy()
-
     def add_to_dict(self, my_dict, key_list, value):
         current_dict = my_dict
         for key in key_list[:-1]:
@@ -1162,16 +1096,6 @@ for x in {x.get_name()}._buttons_dict.values():
     def show_palette(self, properties):
         PaletteEditor(color_manager=properties)
 
-    def get_scrollbar_position(self, content_height, viewport_height, scrollbar_height):
-        scrollable_area = content_height - viewport_height
-        if scrollable_area <= 0:
-            return 0
-        viewport_ratio = viewport_height / content_height
-        scrollbar_ratio = scrollbar_height / scrollable_area
-        offset = scrollable_area * (1 - viewport_ratio)
-        position = offset / scrollable_area * scrollbar_ratio
-        return max(0.0, min(1.0, position))
-
     def map_range(self, value, start1, stop1, start2, stop2):
         return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1))
 
@@ -1253,27 +1177,14 @@ for x in {x.get_name()}._buttons_dict.values():
         except Exception:
             pass
 
-    def loop_clear_image(self, d):
-        for x in list(d.keys()):
-            try:
-                x.img.cget("light_image").close()
-                x.img.cget("dark_image").close()
-            except Exception:
-                pass
-            if d[x] != {}:
-                self.loop_clear_image(d[x])
-
     def close_current_project(self):
-        """Limpa completamente o projeto atual e reinicializa a raiz para evitar KeyError."""
         try:
-            # 1. Destrói todos os widgets filhos visuais na tela de design
             for widget in list(self.id_mapped_widgets.values()):
                 try:
-                    if widget != self.r: # Garante que não destrói a janela raiz do canvas
+                    if widget != self.r:
                         widget.destroy()
                 except Exception:
                     pass
-            # 2. Reseta as estruturas mantendo a raiz principal (self.r)
             self.widgets = {}
             if hasattr(self, 'r') and self.r:
                 self.widgets[self.r] = {}
@@ -1284,11 +1195,9 @@ for x in {x.get_name()}._buttons_dict.values():
             self.file = ""
             self.title = "Window"
             
-            # 3. Limpa a árvore lateral de hierarquia
             if self.hierarchy:
                 self.hierarchy.delete_children()
             
-            # 4. Remove a caixa de seleção vermelha atual se houver
             self.destroy_box()
             
         except Exception as e:
@@ -1343,7 +1252,6 @@ class Hierarchy(CTkScrollableFrame):
                 child.configure(text=new_text)
 
     def delete_widget(self):
-        # Proteção: se não houver nenhum widget selecionado, apenas retorna e não faz nada
         if not hasattr(self, 'widget') or self.widget is None:
             return
         self.main._parents = []
@@ -1529,9 +1437,8 @@ class PaletteEditor(CTkToplevel):
         self.clickables = []
         self.color_manager = color_manager.color_manager
         
-        # Caminho onde as cores personalizadas serão salvas
         self.save_file = resource_path("saved_palette.json")
-        self.load_saved_colors() # Carrega cores salvas anteriormente
+        self.load_saved_colors()
 
         self.scrl = CTkScrollableFrame(self)
         self.scrl.pack(fill="both", expand=True, padx=10, pady=(10, 0))
@@ -1563,7 +1470,6 @@ class PaletteEditor(CTkToplevel):
         self.refresh_color_list()
 
     def load_saved_colors(self):
-        """Carrega as cores salvas do arquivo JSON, se ele existir."""
         if os.path.exists(self.save_file):
             try:
                 with open(self.save_file, "r", encoding="utf-8") as f:
@@ -1574,7 +1480,6 @@ class PaletteEditor(CTkToplevel):
                 print(f"[DEBUG] Erro ao carregar paleta salva: {e}")
 
     def save_colors_to_file(self):
-        """Salva o dicionário atual de cores em um arquivo JSON."""
         try:
             with open(self.save_file, "w", encoding="utf-8") as f:
                 json.dump(self.color_manager.colors, f, indent=4)
@@ -1582,7 +1487,6 @@ class PaletteEditor(CTkToplevel):
             print(f"[DEBUG] Erro ao salvar paleta: {e}")
 
     def refresh_color_list(self):
-        """Atualiza os componentes visuais na tela com base nas cores atuais."""
         for x in list(self.color_manager.colors.keys()):
             self.add_color_option(x, self.color_manager.get_color(x))
 
@@ -1592,7 +1496,7 @@ class PaletteEditor(CTkToplevel):
             self.color_manager.add_color(name=name, color=self.c.cget("fg_color"))
             self.add_color_option(name, self.color_manager.get_color(name))
             self.name_entry.delete(0, "end")
-            self.save_colors_to_file() # Salva no arquivo ao adicionar
+            self.save_colors_to_file()
 
     def hex_to_rgb(self, value):
         value = value.lstrip('#')
@@ -1648,7 +1552,7 @@ class PaletteEditor(CTkToplevel):
     def use(self):
         if hasattr(self, 'command') and self.command is not None:
             self.color_manager.edit(name=self.current_selection[0], val=self.c.cget("fg_color"))
-            self.save_colors_to_file() # Salva no arquivo ao editar
+            self.save_colors_to_file()
             self.destroy()
 
     def change_selection(self, clr):
@@ -1657,9 +1561,6 @@ class PaletteEditor(CTkToplevel):
                 y.configure(fg_color="transparent")
         for x in clr:
             x.configure(fg_color=get_ui_color("selection"))
-
-    def rgb2hex(self, c):
-        return '#%02x%02x%02x' % c
 
 class WindowResizer(CTkFrame):
     def __init__(self, *args, orientation="vertical", widget=None, multiplier=1.5, **kwargs):
@@ -1741,9 +1642,6 @@ class App(CTkToplevel):
         self.tool_bar = CTkFrame(self, height=40)
         self.tool_bar.pack(side="top", fill="x", padx=10, pady=(10, 0))
 
-        # self.home_btn = CTkButton(self.tool_bar, text="", height=28, width=28, image=CTkImage(light_image=Image.open(resource_path(os.path.join("Assets", "baseline_home_white_18dp_1x.png"))), dark_image=Image.open(resource_path(os.path.join("Assets", "baseline_home_white_18dp_1x.png"))), size=(18, 18)))
-        # self.home_btn.pack(side="left", padx=5, pady=5)
-
         self.open_btn = CTkButton(self.tool_bar, text="Abrir projeto", fg_color="transparent", width=50)
         self.open_btn.pack(side="left", padx=5, pady=5)
 
@@ -1789,7 +1687,6 @@ class App(CTkToplevel):
         self.widget_panel_themed = CTkScrollableFrame(self.widget_panel_themed_tab, fg_color="transparent")
         self.widget_panel_themed.pack(padx=(0, 5), pady=5, fill="both", expand=True)
 
-        # Botões de Widgets Core
         self.add_frame_btn = WidgetButton(master=self.widget_panel_core, text="Frame", height=50, on_drag=lambda x, y, widget: self.main.add_widget(Frame, properties={"properties":self.properties_panel}, x=x, y=y, widget=widget))
         self.add_frame_btn.pack(padx=10, pady=(5, 0), fill="x")
 
@@ -1858,7 +1755,6 @@ class App(CTkToplevel):
         self.vert_scrlbar.configure(progress_color=self.vert_scrlbar.cget("bg_color"), fg_color=self.vert_scrlbar.cget("bg_color"))
         self.vert_scrlbar.pack(side="left", fill="y", padx=(10, 0), pady=10)
 
-        # Themed Widgets
         t = CTkFrame(self.widget_panel_themed)
         t.pack(fill="x")
         self.add_button_1_btn = WidgetButton(master=t, text="Button 1", height=50, on_drag=lambda x, y, widget: self.main.add_widget(ThemedButton.Button_1, properties={"properties": self.properties_panel}, x=x, y=y, widget=widget))
@@ -2006,10 +1902,9 @@ class App(CTkToplevel):
         self.wm_iconbitmap()
         self.iconpath = ImageTk.PhotoImage(file=resource_path('Logo.ico'))
         self.after(100, lambda: self.iconphoto(False, self.iconpath))
+
     def on_close(self):
-        """Fecha totalmente a aplicação e mata o processo em segundo plano."""
         try:
-            # Limpa arquivos temporários se houverem
             shutil.rmtree(tempify("temp"), ignore_errors=True)
         except Exception:
             pass
@@ -2030,17 +1925,13 @@ class AssetManagerDialog(CTkToplevel):
         self.iconpath = ImageTk.PhotoImage(file=resource_path('Logo.ico'))
         self.after(100, lambda: self.iconphoto(False, self.iconpath))
 
-        # Abas principais (Tabview)
         self.tabview = CTkTabview(self)
         self.tabview.pack(fill="both", expand=True, padx=15, pady=15)
 
         self.tab_project = self.tabview.add("Assets do Projeto")
         self.tab_library = self.tabview.add("Banco de Ícones (Biblioteca)")
 
-        # Configurar Aba 1: Assets do Projeto
         self.setup_project_tab()
-
-        # Configurar Aba 2: Banco de Ícones (Biblioteca)
         self.setup_library_tab()
 
     def setup_project_tab(self):
@@ -2058,7 +1949,6 @@ class AssetManagerDialog(CTkToplevel):
         self.load_project_assets()
 
     def setup_library_tab(self):
-        # Topo da biblioteca com barra de pesquisa
         top_lib_frame = CTkFrame(self.tab_library, fg_color="transparent")
         top_lib_frame.pack(fill="x", padx=10, pady=10)
 
@@ -2117,7 +2007,6 @@ class AssetManagerDialog(CTkToplevel):
                 row += 1
 
     def load_library_assets(self):
-        # Pasta padrão onde ficarão centenas de ícones (ex: 'IconLibrary' na raiz do projeto)
         self.lib_dir = resource_path("IconLibrary")
         if not os.path.exists(self.lib_dir):
             os.makedirs(self.lib_dir, exist_ok=True)
